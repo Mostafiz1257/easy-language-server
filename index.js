@@ -28,6 +28,7 @@ async function run() {
     // Send a ping to confirm a successful connection
     const languageCollection = client.db('language').collection('classes')
     const instructorsCollection = client.db('language').collection('instructors')
+    const userCollection = client.db('language').collection('users')
 
     //all classes get operation
     app.get('/classes', async (req, res) => {
@@ -36,10 +37,25 @@ async function run() {
     })
 
     //all instructors get operation
-    app.get('/instructors',async(req,res)=>{
+    app.get('/instructors', async (req, res) => {
       const result = await instructorsCollection.find().toArray();
       res.send(result)
     })
+
+    // add to db post created user email and name
+    app.post('/users', async (req, res) => {
+      const user = req.body;
+      console.log(user);
+      const query = { email: user.email }
+      const exitingUSer = await userCollection.findOne(query)
+      if (exitingUSer) {
+        return res.send({ message: 'exit user null' })
+      }
+      const result = await userCollection.insertOne(query)
+      res.send(result)
+    })
+
+
 
     
     await client.db("admin").command({ ping: 1 });
