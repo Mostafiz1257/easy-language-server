@@ -10,7 +10,9 @@ app.use(express.json())
 
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.esni35a.mongodb.net/?retryWrites=true&w=majority`;
+// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.esni35a.mongodb.net/?retryWrites=true&w=majority`;
+
+var uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ac-848jnr6-shard-00-00.esni35a.mongodb.net:27017,ac-848jnr6-shard-00-01.esni35a.mongodb.net:27017,ac-848jnr6-shard-00-02.esni35a.mongodb.net:27017/?ssl=true&replicaSet=atlas-bmxs0j-shard-0&authSource=admin&retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -26,9 +28,11 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
     // Send a ping to confirm a successful connection
+
     const languageCollection = client.db('language').collection('classes')
     const instructorsCollection = client.db('language').collection('instructors')
     const userCollection = client.db('language').collection('users')
+    const classCollection = client.db('language').collection('myClass')
 
     //all classes get operation
     app.get('/classes', async (req, res) => {
@@ -55,9 +59,14 @@ async function run() {
       res.send(result)
     })
 
+    //select class by email
+    app.post('/myClass', async (req, res) => {
+      const classItem = req.body
+      const result = await classCollection.insertOne(classItem)
+      res.send(result)
+    })
 
 
-    
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
