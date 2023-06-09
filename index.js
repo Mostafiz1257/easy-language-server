@@ -47,6 +47,11 @@ async function run() {
     })
 
     // add to db post created user email and name
+    app.get('/users', async (req, res) => {
+      const result = await userCollection.find().toArray()
+      res.send(result)
+    })
+    
     app.post('/users', async (req, res) => {
       const user = req.body;
       console.log(user);
@@ -60,25 +65,25 @@ async function run() {
     })
 
     //select class by email
-    app.get('/myClass',async(req,res)=>{
+    app.get('/myClass', async (req, res) => {
       const email = req.query.email;
-      if(!email){
+      if (!email) {
         res.send([])
       }
-      const query = {email : email}
+      const query = { email: email }
       const result = await classCollection.find(query).toArray()
       res.send(result)
     })
-    
+
     app.post('/myClass', async (req, res) => {
       const classItem = req.body
       const result = await classCollection.insertOne(classItem)
       res.send(result)
     })
 
-    app.delete('/myClass/:id',async(req,res)=>{
-      const id = req.params.id ;
-      const deleteClass = { _id : new ObjectId(id)}
+    app.delete('/myClass/:id', async (req, res) => {
+      const id = req.params.id;
+      const deleteClass = { _id: new ObjectId(id) }
       const result = classCollection.deleteOne(deleteClass)
       res.send(result)
 
