@@ -9,7 +9,7 @@ app.use(express.json())
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 // const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.esni35a.mongodb.net/?retryWrites=true&w=majority`;
 
 var uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ac-848jnr6-shard-00-00.esni35a.mongodb.net:27017,ac-848jnr6-shard-00-01.esni35a.mongodb.net:27017,ac-848jnr6-shard-00-02.esni35a.mongodb.net:27017/?ssl=true&replicaSet=atlas-bmxs0j-shard-0&authSource=admin&retryWrites=true&w=majority`;
@@ -55,15 +55,33 @@ async function run() {
       if (exitingUSer) {
         return res.send({ message: 'exit user null' })
       }
-      const result = await userCollection.insertOne(query)
+      const result = await userCollection.insertOne(user)
       res.send(result)
     })
 
     //select class by email
+    app.get('/myClass',async(req,res)=>{
+      const email = req.query.email;
+      if(!email){
+        res.send([])
+      }
+      const query = {email : email}
+      const result = await classCollection.find(query).toArray()
+      res.send(result)
+    })
+    
     app.post('/myClass', async (req, res) => {
       const classItem = req.body
       const result = await classCollection.insertOne(classItem)
       res.send(result)
+    })
+
+    app.delete('/myClass/:id',async(req,res)=>{
+      const id = req.params.id ;
+      const deleteClass = { _id : new ObjectId(id)}
+      const result = classCollection.deleteOne(deleteClass)
+      res.send(result)
+
     })
 
 
