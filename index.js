@@ -49,7 +49,7 @@ async function run() {
 
     app.post('/jwt', (req, res) => {
       const user = req.body;
-      console.log('abx',req.body);
+      // console.log('abx',req.body);
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: '1h'
       })
@@ -86,17 +86,17 @@ async function run() {
       res.send(result)
     })
 
-
     app.get('/users/admin/:email',  async(req,res)=>{
       const email = req.params.email;    
       const query = { email: email}
+      console.log(query);
       const user=  await userCollection.findOne(query)
       const result = {admin : user?.role ==='admin'}
       console.log('hit this');
       res.send(result)
     })
 
-    app.patch('/users/admin/:id', async (req, res) => {
+    app.patch('/users/admin/:id',verifyJWT, async (req, res) => {
       const id = req.params.id
       console.log('b',id);
       const filter = { _id: new ObjectId(id) }
@@ -118,6 +118,17 @@ async function run() {
         },
       }
       const result = await userCollection.updateOne(filter, updateDoc)
+      res.send(result)
+    })
+
+    //user instructor and verify by jwt.
+    app.get('/users/instructor/:email', verifyJWT, async(req,res)=>{
+      const email = req.params.email;    
+      const query = { email: email}
+      console.log(query);
+      const user=  await userCollection.findOne(query)
+      const result = { instructor: user?.role ==='instructor'}
+      console.log('hit this now');
       res.send(result)
     })
 
