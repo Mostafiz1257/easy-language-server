@@ -61,6 +61,12 @@ async function run() {
       const result = await languageCollection.find().toArray()
       res.send(result)
     })
+    //Add an new Class
+    app.post('/classes', async (req, res) => {
+      const newClass = req.body;
+      const result = await languageCollection.insertOne(newClass)
+      res.send(result)
+    })
 
     //all instructors get operation
     app.get('/instructors', async (req, res) => {
@@ -76,7 +82,7 @@ async function run() {
 
     app.post('/users', async (req, res) => {
       const user = req.body;
-      console.log('a',user);
+      console.log('a', user);
       const query = { email: user.email }
       const exitingUSer = await userCollection.findOne(query)
       if (exitingUSer) {
@@ -86,19 +92,19 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/users/admin/:email',  async(req,res)=>{
-      const email = req.params.email;    
-      const query = { email: email}
+    app.get('/users/admin/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email }
       console.log(query);
-      const user=  await userCollection.findOne(query)
-      const result = {admin : user?.role ==='admin'}
+      const user = await userCollection.findOne(query)
+      const result = { admin: user?.role === 'admin' }
       console.log('hit this');
       res.send(result)
     })
 
-    app.patch('/users/admin/:id',verifyJWT, async (req, res) => {
+    app.patch('/users/admin/:id', verifyJWT, async (req, res) => {
       const id = req.params.id
-      console.log('b',id);
+      console.log('b', id);
       const filter = { _id: new ObjectId(id) }
       const updateDoc = {
         $set: {
@@ -110,7 +116,7 @@ async function run() {
     })
     app.patch('/users/instructor/:id', async (req, res) => {
       const id = req.params.id
-      console.log('c',id);
+      console.log('c', id);
       const filter = { _id: new ObjectId(id) }
       const updateDoc = {
         $set: {
@@ -122,12 +128,12 @@ async function run() {
     })
 
     //user instructor and verify by jwt.
-    app.get('/users/instructor/:email', verifyJWT, async(req,res)=>{
-      const email = req.params.email;    
-      const query = { email: email}
+    app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email }
       console.log(query);
-      const user=  await userCollection.findOne(query)
-      const result = { instructor: user?.role ==='instructor'}
+      const user = await userCollection.findOne(query)
+      const result = { instructor: user?.role === 'instructor' }
       console.log('hit this now');
       res.send(result)
     })
