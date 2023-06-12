@@ -3,6 +3,8 @@ const cors = require('cors')
 const jwt = require('jsonwebtoken');
 require('dotenv').config()
 const app = express();
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
+
 const port = process.env.PORT || 5000
 
 app.use(cors())
@@ -24,6 +26,7 @@ const verifyJWT = (req, res, next) => {
 }
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { default: Stripe } = require('stripe');
 
 var uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ac-848jnr6-shard-00-00.esni35a.mongodb.net:27017,ac-848jnr6-shard-00-01.esni35a.mongodb.net:27017,ac-848jnr6-shard-00-02.esni35a.mongodb.net:27017/?ssl=true&replicaSet=atlas-bmxs0j-shard-0&authSource=admin&retryWrites=true&w=majority`;
 
@@ -43,7 +46,7 @@ async function run() {
     // Send a ping to confirm a successful connection
 
     const languageCollection = client.db('language').collection('classes')
-    const instructorsCollection = client.db('language').collection('instructors')
+    // const instructorsCollection = client.db('language').collection('instructors')
     const userCollection = client.db('language').collection('users')
     const classCollection = client.db('language').collection('myClass')
 
@@ -61,6 +64,16 @@ async function run() {
       const result = await languageCollection.find().toArray()
       res.send(result)
     })
+
+    app.get('/newClass/:email', async (req, res) => {
+      const email = req.params.email;
+      console.log('email koi', email);
+      const query = { instructor_Email: email }
+      const result = await languageCollection.find(query).toArray()
+      console.log(result);
+      res.send(result)
+    })
+
     //Add an new Class
     app.post('/classes', async (req, res) => {
       const newClass = req.body;
@@ -94,15 +107,16 @@ async function run() {
 
     app.get('/users/admin/:email', async (req, res) => {
       const email = req.params.email;
+      // console.log(email);
       const query = { email: email }
-      console.log(query);
+      // console.log(query);
       const user = await userCollection.findOne(query)
       const result = { admin: user?.role === 'admin' }
-      console.log('hit this');
       res.send(result)
+      console.log('hit this', result);
     })
 
-    app.patch('/users/admin/:id', verifyJWT, async (req, res) => {
+    app.patch('/users/admin/:id', async (req, res) => {
       const id = req.params.id
       console.log('b', id);
       const filter = { _id: new ObjectId(id) }
@@ -128,26 +142,27 @@ async function run() {
     })
 
     //user instructor and verify by jwt.
-    app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
+    app.get('/users/instructor/:email', async (req, res) => {
       const email = req.params.email;
       const query = { email: email }
-      console.log(query);
+      // console.log(query);
       const user = await userCollection.findOne(query)
       const result = { instructor: user?.role === 'instructor' }
       console.log('hit this now');
       res.send(result)
     })
 
-    //select class by email
-    app.get('/myClass', verifyJWT, async (req, res) => {
+    //select class by email // 
+    //toto: jwt bosayo pore.
+    app.get('/myClass', async (req, res) => {
       const email = req.query.email;
-      if (!email) {
-        res.send([])
-      }
-      const decodedEmail = req.decoded.email;
-      if (email !== decodedEmail) {
-        return res.status(403).send({ error: true, message: 'forbidden access' })
-      }
+      // if (!email) {
+      //   res.send([])
+      // }
+      // const decodedEmail = req.decoded.email;
+      // if (email !== decodedEmail) {
+      //   return res.status(403).send({ error: true, message: 'forbidden access' })
+      // }
       const query = { email: email }
       const result = await classCollection.find(query).toArray()
       res.send(result)
@@ -166,8 +181,19 @@ async function run() {
       res.send(result)
 
     })
-
-
+    //payment ------------
+    app.post('/create-payment-intent', async (req, res) => {
+      const { price } = req.body;
+      const amount = price * 100;
+      const paymentIntent = await stripe.paymentIntent.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card']
+      });
+      res.send({
+        clientSecret:paymentIntent.client_secret
+      })
+    })
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
